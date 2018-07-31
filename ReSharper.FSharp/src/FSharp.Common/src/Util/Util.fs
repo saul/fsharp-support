@@ -23,6 +23,12 @@ module rec CommonUtil =
     open Microsoft.FSharp.Compiler
     open Microsoft.FSharp.Compiler.SourceCodeServices
 
+    /// Reference equality.
+    let inline (==) a b = LanguagePrimitives.PhysicalEquality a b
+
+    /// Reference inequality.
+    let inline (!=) a b = not (a == b)
+
     let private interruptCheckTimeout = 30
 
     let inline isNotNull x = not (isNull x)
@@ -37,7 +43,7 @@ module rec CommonUtil =
         equalsIgnoreCase FsprojExtension projectFile.ExtensionNoDot ||
         Seq.exists FSharpProjectPropertiesFactory.IsKnownProjectTypeGuid guids
 
-    let (|FSharProjectMark|_|) (mark: IProjectMark) =
+    let (|FSharpProjectMark|_|) (mark: IProjectMark) =
         if isFSharpProject [mark.Guid] mark.Location then Some() else None
 
     let ensureAbsolute (path: FileSystemPath) (projectDirectory: FileSystemPath) =
@@ -96,15 +102,16 @@ module rec CommonUtil =
 
     type Line = Int32<DocLine>
     type Column = Int32<DocColumn>
+    type FileSystemPath = JetBrains.Util.FileSystemPath
 
-    let docLine (x: int)   = Line.op_Explicit(x)
-    let docColumn (x: int) = Column.op_Explicit(x)
+    let inline docLine (x: int)   = Line.op_Explicit(x)
+    let inline docColumn (x: int) = Column.op_Explicit(x)
 
     type Range.range with
-        member x.GetStartLine()   = x.StartLine - 1 |> docLine
-        member x.GetEndLine()     = x.EndLine - 1   |> docLine
-        member x.GetStartColumn() = x.StartColumn   |> docColumn
-        member x.GetEndColumn()   = x.EndColumn     |> docColumn
+        member inline x.GetStartLine()   = x.StartLine - 1 |> docLine
+        member inline x.GetEndLine()     = x.EndLine - 1   |> docLine
+        member inline x.GetStartColumn() = x.StartColumn   |> docColumn
+        member inline x.GetEndColumn()   = x.EndColumn     |> docColumn
 
         member x.ToTextRange(document: IDocument) =
             let startOffset = document.GetLineStartOffset(x.GetStartLine()) + x.StartColumn
