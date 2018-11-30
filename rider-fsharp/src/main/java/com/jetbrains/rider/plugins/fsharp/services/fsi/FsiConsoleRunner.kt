@@ -58,14 +58,13 @@ class FsiConsoleRunner(sessionInfo: RdFsiSessionInfo, val fsiHost: FsiHost, debu
         private const val debugNotConfiguredDescription = "F# Interactive should be relaunched."
         private const val notificationLinks = "<br/>${RelaunchFsiWithDebugAction.link}&nbsp;&nbsp;&nbsp;&nbsp;${ShowFsiSettingsAction.link}"
 
-        private val riderFsiArgs = listOf("--fsi-server:rider", "--readline-")
         private val debugFsiArgs = listOf("--optimize-", "--debug+")
 
         private const val waitForDebugSessionTimeout = 15000L
     }
 
     val optimizeForDebug = debug || sessionInfo.fixArgsForAttach
-    private val fsiArgs = sessionInfo.args + (if (optimizeForDebug) debugFsiArgs else emptyList()) + riderFsiArgs
+    private val fsiArgs = sessionInfo.args + (if (optimizeForDebug) debugFsiArgs else emptyList())
     private var cmdLine = GeneralCommandLine()
             .withExePath(sessionInfo.fsiPath)
             .withParameters(fsiArgs)
@@ -246,8 +245,7 @@ class FsiConsoleRunner(sessionInfo: RdFsiSessionInfo, val fsiHost: FsiHost, debu
 
     private class OpenSettings(val project: Project) : AnAction("F# Interactive settings", null, AllIcons.General.Settings) {
         override fun actionPerformed(e: AnActionEvent) {
-            ShowSettingsUtil.getInstance()
-                    .showSettingsDialog(project, "preferences.FsiOptionsPage")
+            ShowSettingsUtil.getInstance().showSettingsDialog(project, "Fsi")
         }
     }
 }
