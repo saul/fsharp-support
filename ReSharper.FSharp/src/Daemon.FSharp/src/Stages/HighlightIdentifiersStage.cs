@@ -10,6 +10,7 @@ using JetBrains.ReSharper.Feature.Services.Daemon;
 using JetBrains.ReSharper.Plugins.FSharp.Daemon.Cs.Highlightings;
 using JetBrains.ReSharper.Plugins.FSharp.Psi.Resolve;
 using JetBrains.ReSharper.Plugins.FSharp.Psi.Tree;
+using JetBrains.Util;
 using JetBrains.Util.DataStructures;
 using Microsoft.FSharp.Compiler.SourceCodeServices;
 
@@ -30,12 +31,10 @@ namespace JetBrains.ReSharper.Plugins.FSharp.Daemon.Cs.Stages
     public HighlightIdentifiersStageProcess([NotNull] IFSharpFile fsFile, [NotNull] IDaemonProcess process)
       : base(fsFile, process) => myDocument = process.Document;
 
-    private void HighlightUses(Action<DaemonStageResult> committer,
-      IEnumerable<IReadOnlyList<FSharpResolvedSymbolUse>> allSymbols, int allSymbolsCount)
+    private void AddHighlightings(IEnumerable<FSharpResolvedSymbolUse> symbolsUses,
+      ICollection<HighlightingInfo> highlightings)
     {
-      var highlightings = new ChunkList<HighlightingInfo>(allSymbolsCount);
-      foreach (var symbols in allSymbols)
-      foreach (var resolvedSymbolUse in symbols)
+      foreach (var resolvedSymbolUse in symbolsUses)
       {
         var symbolUse = resolvedSymbolUse.SymbolUse;
         var symbol = symbolUse.Symbol;
@@ -61,8 +60,6 @@ namespace JetBrains.ReSharper.Plugins.FSharp.Daemon.Cs.Stages
 
         SeldomInterruptChecker.CheckForInterrupt();
       }
-
-      committer(new DaemonStageResult(highlightings));
     }
 
     public override void Execute(Action<DaemonStageResult> committer)
@@ -73,7 +70,10 @@ namespace JetBrains.ReSharper.Plugins.FSharp.Daemon.Cs.Stages
       var usages = FSharpFile.GetAllResolvedSymbols();
       InterruptableActivityCookie.CheckAndThrow();
 
-      HighlightUses(committer, new[] {declarations, usages}, declarations.Count + usages.Count);
+      var highlightings = new ChunkList<HighlightingInfo>(declarations.Count + usages.Count);
+      AddHighlightings(declarations, highlightings);
+      AddHighlightings(usages, highlightings);
+      committer(new DaemonStageResult(highlightings.AsReadOnlyCollection()));
     }
   }
 }
