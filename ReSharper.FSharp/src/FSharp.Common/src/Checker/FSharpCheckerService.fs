@@ -14,6 +14,7 @@ open JetBrains.DocumentModel
 open JetBrains.ProjectModel
 open JetBrains.ReSharper.Feature.Services
 open JetBrains.ReSharper.Plugins.FSharp
+open JetBrains.ReSharper.Plugins.FSharp.Psi.Features
 open JetBrains.ReSharper.Plugins.FSharp.Settings
 open JetBrains.ReSharper.Plugins.FSharp.Util
 open JetBrains.ReSharper.Psi
@@ -29,7 +30,7 @@ module FSharpCheckerService =
 [<ShellComponent; AllowNullLiteral>]
 type FSharpCheckerService
         (lifetime, logger: ILogger, onSolutionCloseNotifier: OnSolutionCloseNotifier, settingsStore: ISettingsStore,
-         settingsSchema: SettingsSchema) =
+         settingsSchema: SettingsSchema, [<NotNull>] reactorMonitor: FcsReactorMonitor) =
 
     let checker =
         Environment.SetEnvironmentVariable("FCS_CheckFileInProjectCacheSize", "20")
@@ -48,6 +49,7 @@ type FSharpCheckerService
                 FSharpChecker.Create(projectCacheSize = 200,
                                      keepAllBackgroundResolutions = false,
                                      keepAllBackgroundSymbolUses = false,
+                                     reactorListener = reactorMonitor,
                                      ImplicitlyStartBackgroundWork = enableBgCheck.Value)
 
             enableBgCheck.Change.Advise_NoAcknowledgement(lifetime, fun (ArgValue enabled) ->

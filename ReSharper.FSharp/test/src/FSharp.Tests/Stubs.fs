@@ -22,4 +22,5 @@ type FSharpFileServiceStub() =
 
 [<SolutionComponent>]
 type TestFcsReactorMonitor() =
+    // todo: does this need to be IReactorListener?
     interface IHideImplementation<FcsReactorMonitor>
